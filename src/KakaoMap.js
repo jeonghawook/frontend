@@ -2,14 +2,18 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
 function KakaoMap() {
-  const [centerCoordinates, setCenterCoordinates] = useState(null);
+  const [myLatitude, setMyLatitude] = useState(null);
+  const [myLongitude, setMyLongitude] = useState(null);
+  const [listData, setListData] = useState([]);
 
   useEffect(() => {
     const fetchCoordinates = async () => {
       try {
-        const response = await axios.get('/locations');
-        const { latitude, longitude } = response.data;
-        setCenterCoordinates({ lat: latitude, lng: longitude });
+        const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
+        const latitude = response.data.latitude;
+        const longitude = response.data.longitude;
+        setMyLatitude(latitude);
+        setMyLongitude(longitude);
       } catch (error) {
         console.error('Failed to fetch coordinates:', error);
       }
@@ -19,7 +23,7 @@ function KakaoMap() {
   }, []);
 
   useEffect(() => {
-    if (centerCoordinates) {
+    if (myLatitude !== null && myLongitude !== null) {
       const script = document.createElement('script');
       script.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=b0ec7d51ba5347b70f253b74cdaa6182&libraries=services';
       script.async = true;
@@ -28,36 +32,129 @@ function KakaoMap() {
       script.onload = () => {
         const mapContainer = document.getElementById('map');
         const mapOptions = {
-          center: new window.kakao.maps.LatLng(centerCoordinates.lat, centerCoordinates.lng),
+          center: new window.kakao.maps.LatLng(myLatitude, myLongitude),
           level: 3,
         };
 
         const map = new window.kakao.maps.Map(mapContainer, mapOptions);
 
-        window.kakao.maps.event.addListener(map, 'bounds_changed', function () {
-          var bounds = map.getBounds();
-          var swLatlng = bounds.getSouthWest();
-          var neLatlng = bounds.getNorthEast();
-
-          var message =
-            '<p>영역좌표는 남서쪽 위도, 경도는 ' +
-            swLatlng.toString() +
-            '이고 <br>';
-          message +=
-            '북동쪽 위도, 경도는 ' + neLatlng.toString() + '입니다 </p>';
-
-          var resultDiv = document.getElementById('result');
-          resultDiv.innerHTML = message;
+        window.kakao.maps.event.addListener(map, 'click', function () {
+          sendCoordinatesToBackend(map);
         });
+
+        window.kakao.maps.event.addListener(map, 'dragend', function () {
+          sendCoordinatesToBackend(map);
+        });
+
+        sendCoordinatesToBackend(map);
       };
     }
-  }, [centerCoordinates]);
+  }, [myLatitude, myLongitude]);
+
+  const sendCoordinatesToBackend = async (map) => {
+    try {
+      const bounds = map.getBounds();
+      const swLatlng = bounds.getSouthWest();
+      const neLatlng = bounds.getNorthEast();
+
+      const response = await axios.post(
+        'http://localhost:3300/stores/coordinates',
+        {
+          swLatlng,
+          neLatlng,
+        }
+      );
+
+      if (response) {
+         const storeData = response.data['근처식당목록'];
+         setListData(storeData);
+        // Clear existing markers
+  
+
+        // const positions = [
+        //   {
+        //     content: `<div>살려줘</div>`,
+        //     latlng: new window.kakao.maps.LatLng(37.7562, 126.7865),
+        //   },
+        //   {
+        //     content: '<div>나도</div>',
+        //     latlng: new window.kakao.maps.LatLng(37.7552, 126.7855),
+        //   },
+        //   {
+        //     content: '<div>자고</div>',
+        //     latlng: new window.kakao.maps.LatLng(37.7542, 126.7845),
+        //   },
+        //   {
+        //     content: '<div>싶어...4시야 또</div>',
+        //     latlng: new window.kakao.maps.LatLng(37.7532, 126.7835),
+        //   },
+        // ];
+
+        // for (let i = 0; i < positions.length; i++) {
+        //   const marker = new window.kakao.maps.Marker({
+        //     map: map,
+        //     position: positions[i].latlng,
+        //   });
+
+        //   const infowindow = new window.kakao.maps.InfoWindow({
+        //     content: positions[i].content,
+        //   });
+
+
+  for (let i = 0; i < storeData.length; i++) {
+        const position = storeData[i];
+        console.log(position)
+        const marker = new window.kakao.maps.Marker({
+          map: map,
+          position: new window.kakao.maps.LatLng(
+            
+            position.La,
+            position.Ma
+          ),
+        });
+
+        const infowindow = new window.kakao.maps.InfoWindow({
+          content: `<div>${position.storeName}</div>`,
+        });
+
+
+          
+
+          window.kakao.maps.event.addListener(
+            marker,
+            'mouseover',
+            makeOverListener(map, marker, infowindow)
+          );
+          window.kakao.maps.event.addListener(
+            marker,
+            'mouseout',
+            makeOutListener(infowindow)
+          );
+        }
+      }
+    }
+   catch (error) {
+      console.error('Failed to send coordinates to backend:', error);
+    }
+  };
+
+  function makeOverListener(map, marker, infowindow) {
+    return function () {
+      infowindow.open(map, marker);
+    };
+  }
+
+  function makeOutListener(infowindow) {
+    return function () {
+      infowindow.close();
+    };
+  }
 
   return (
     <div>
       <div id="map" style={{ width: '100%', height: '350px' }}></div>
       <p>
-        <em>지도 영역이 변경되면 지도 정보가 표출됩니다</em>
+        {/* <em>지도 영역이 변경되면 지도 정보가 표출됩니다</em> */}
       </p>
       <p id="result"></p>
     </div>
