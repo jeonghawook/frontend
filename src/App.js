@@ -1,12 +1,20 @@
 import React from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import KakaoMap from './KakaoMap';
+import Header from './header';
+import StorePage from './StorePage';
+
 
 function App() {
   return (
-    <div className="App">
-      <h1>KakaoMap in React</h1>
-      <KakaoMap />
-    </div>
+    <BrowserRouter>
+    <Header/>
+        <Routes>
+          <Route path="/" element={<KakaoMap />} />
+          <Route path="/store/:storeId" element={<StorePage />} />
+      <Route path="/admin" element ={<AdminPage />} />
+        </Routes>
+        </BrowserRouter>
   );
 }
 

@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+   
 import axios from 'axios';
 
 function KakaoMap() {
   const [myLatitude, setMyLatitude] = useState(null);
   const [myLongitude, setMyLongitude] = useState(null);
   const [listData, setListData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchedListData, setSearchedListData] = useState([]);
+
 
   useEffect(() => {
     const fetchCoordinates = async () => {
@@ -58,7 +63,7 @@ function KakaoMap() {
       const neLatlng = bounds.getNorthEast();
 
       const response = await axios.post(
-        'http://localhost:3300/stores/coordinates',
+        'http://localhost:3300/places/coordinates',
         {
           swLatlng,
           neLatlng,
@@ -66,10 +71,11 @@ function KakaoMap() {
       );
 
       if (response) {
-         const storeData = response.data['근처식당목록'];
-         setListData(storeData);
+        const storeData = response.data['근처식당목록'];
+        setListData(storeData);
+
         // Clear existing markers
-  
+        // ...
 
         // const positions = [
         //   {
@@ -100,25 +106,17 @@ function KakaoMap() {
         //     content: positions[i].content,
         //   });
 
+        for (let i = 0; i < storeData.length; i++) {
+          const position = storeData[i];
+          console.log(position);
+          const marker = new window.kakao.maps.Marker({
+            map: map,
+            position: new window.kakao.maps.LatLng(position.La, position.Ma),
+          });
 
-  for (let i = 0; i < storeData.length; i++) {
-        const position = storeData[i];
-        console.log(position)
-        const marker = new window.kakao.maps.Marker({
-          map: map,
-          position: new window.kakao.maps.LatLng(
-            
-            position.La,
-            position.Ma
-          ),
-        });
-
-        const infowindow = new window.kakao.maps.InfoWindow({
-          content: `<div>${position.storeName}</div>`,
-        });
-
-
-          
+          const infowindow = new window.kakao.maps.InfoWindow({
+            content: `<div>${position.storeName}</div>`,
+          });
 
           window.kakao.maps.event.addListener(
             marker,
@@ -132,8 +130,7 @@ function KakaoMap() {
           );
         }
       }
-    }
-   catch (error) {
+    } catch (error) {
       console.error('Failed to send coordinates to backend:', error);
     }
   };
@@ -150,13 +147,43 @@ function KakaoMap() {
     };
   }
 
+  const handleSearch = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3300/places/search?keyword=${searchTerm}`);
+
+      if (response) {
+        const storeData = response.data;
+        setSearchedListData(storeData);
+      }
+    } catch (error) {
+      console.error('Failed to search for places:', error);
+    }
+  
+  };
+
   return (
     <div>
       <div id="map" style={{ width: '100%', height: '350px' }}></div>
-      <p>
-        {/* <em>지도 영역이 변경되면 지도 정보가 표출됩니다</em> */}
-      </p>
-      <p id="result"></p>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <button onClick={handleSearch}>Search</button>
+      <ul>
+      {searchedListData.length > 0
+  ? searchedListData.map((store) => (
+      <li key={store.id}>
+        <Link to={`/store/${store.id}`}>{store.name}</Link>
+      </li>
+    ))
+  : listData.map((store) => (
+      <li key={store.id}>
+        <Link to={`/store/${store.id}`}>{store.name}</Link>
+      </li>
+    ))}
+
+      </ul>
     </div>
   );
 }
