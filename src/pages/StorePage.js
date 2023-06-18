@@ -41,12 +41,12 @@ function StorePage() {
   if (!storeData) {
     return <div>Loading...</div>;
   }
-
+console.log(storeData)
   return (
     <div>
-      <h2>Store Page for ID: {storeId}</h2>
-      <p>Store Name: {storeData.name}</p>
-      <p>Address: {storeData.address}</p>
+      <h2>일단 잘보이게 스토어 아이디: {storeId}</h2>
+      <p>상점이름: {storeData.storeName}</p>
+      <p>주소: {storeData.address}</p>
       <input type="number" value={number} onChange={handleChange} />
       <button onClick={handleClick}>Send</button>
     </div>

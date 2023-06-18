@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Cookies from 'js-cookie';
-import axios from 'axios';
+
 import jwt_decode from "jwt-decode";
+import instance from "../api/interceptor"
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -27,28 +28,29 @@ const Header = () => {
     e.preventDefault();
 
     try {
-        const response = await axios.post('http://localhost:3000/auth/login', {
+        const response = await instance.post(`/auth/login`, {
           email,
           password,
         });
-  
+        if(response){
+        const refreshToken = response.data.refreshToken;
         const accessToken = response.data.accessToken;
         const decodedToken = jwt_decode(accessToken); 
-        const { nickname, isAdmin } = decodedToken;
+        const {  isAdmin, email, userId } = decodedToken;
   
-       
+        console.log(decodedToken)
         console.log('Access Token:', accessToken);
-        console.log('Nickname:', nickname);
-        console.log('Is Admin:', isAdmin);
-  
+        Cookies.set('refresh_token', refreshToken)
         Cookies.set('access_token', accessToken);
-        dispatch({ type: 'LOGIN', payload: { isAdmin, nickname } });
+        dispatch({ type: 'LOGIN', payload: { email, userId, isAdmin } });
 
+        }
+    
       } catch (error) {
         console.error('Login failed:', error);
       }
     
-   
+
   };
 
   return (
@@ -57,7 +59,7 @@ const Header = () => {
         {isLoggedIn && isAdmin ? (
           <ul>
             <li>
-              Welcome, {nickname} (Admin)
+              Welcome, {email} 
             </li>
             <li>
             

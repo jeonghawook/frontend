@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-   
+import { Box, Button, Input, UnorderedList, ListItem } from '@chakra-ui/react';
+import { Container, Square, Circle } from '@chakra-ui/react'
 import axios from 'axios';
-
+import { Link } from 'react-router-dom';
 function KakaoMap() {
   const [myLatitude, setMyLatitude] = useState(null);
   const [myLongitude, setMyLongitude] = useState(null);
@@ -13,16 +13,26 @@ function KakaoMap() {
 
   useEffect(() => {
     const fetchCoordinates = async () => {
+
       try {
-        const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
-        const latitude = response.data.latitude;
-        const longitude = response.data.longitude;
-        setMyLatitude(latitude);
-        setMyLongitude(longitude);
+
+        navigator.geolocation.getCurrentPosition(function (position) {
+
+          var lat = position.coords.latitude;// 위도
+          var lon = position.coords.longitude; // 경도
+          console.log(lat, lon)
+          setMyLatitude(lat);
+          setMyLongitude(lon);
+        });
+
+
       } catch (error) {
         console.error('Failed to fetch coordinates:', error);
       }
     };
+
+    fetchCoordinates();
+
 
     fetchCoordinates();
   }, []);
@@ -30,7 +40,7 @@ function KakaoMap() {
   useEffect(() => {
     if (myLatitude !== null && myLongitude !== null) {
       const script = document.createElement('script');
-      script.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=b0ec7d51ba5347b70f253b74cdaa6182&libraries=services';
+      script.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=091ccaf6ebd3685465c663c2218360f5&libraries=services';
       script.async = true;
       document.head.appendChild(script);
 
@@ -56,6 +66,11 @@ function KakaoMap() {
     }
   }, [myLatitude, myLongitude]);
 
+
+
+
+
+
   const sendCoordinatesToBackend = async (map) => {
     try {
       const bounds = map.getBounds();
@@ -63,59 +78,31 @@ function KakaoMap() {
       const neLatlng = bounds.getNorthEast();
 
       const response = await axios.post(
-        'http://localhost:3300/places/coordinates',
+        'http://localhost:3300/places/coordinate',
         {
           swLatlng,
           neLatlng,
+          myLatitude,
+          myLongitude
         }
       );
 
       if (response) {
-        const storeData = response.data['근처식당목록'];
+        const storeData = response.data
+
         setListData(storeData);
-
-        // Clear existing markers
-        // ...
-
-        // const positions = [
-        //   {
-        //     content: `<div>살려줘</div>`,
-        //     latlng: new window.kakao.maps.LatLng(37.7562, 126.7865),
-        //   },
-        //   {
-        //     content: '<div>나도</div>',
-        //     latlng: new window.kakao.maps.LatLng(37.7552, 126.7855),
-        //   },
-        //   {
-        //     content: '<div>자고</div>',
-        //     latlng: new window.kakao.maps.LatLng(37.7542, 126.7845),
-        //   },
-        //   {
-        //     content: '<div>싶어...4시야 또</div>',
-        //     latlng: new window.kakao.maps.LatLng(37.7532, 126.7835),
-        //   },
-        // ];
-
-        // for (let i = 0; i < positions.length; i++) {
-        //   const marker = new window.kakao.maps.Marker({
-        //     map: map,
-        //     position: positions[i].latlng,
-        //   });
-
-        //   const infowindow = new window.kakao.maps.InfoWindow({
-        //     content: positions[i].content,
-        //   });
+        console.log(listData)
 
         for (let i = 0; i < storeData.length; i++) {
           const position = storeData[i];
           console.log(position);
           const marker = new window.kakao.maps.Marker({
             map: map,
-            position: new window.kakao.maps.LatLng(position.La, position.Ma),
+            position: new window.kakao.maps.LatLng(position.la, position.ma),
           });
 
           const infowindow = new window.kakao.maps.InfoWindow({
-            content: `<div>${position.storeName}</div>`,
+            content: `<div>${position.storename}</div>`,
           });
 
           window.kakao.maps.event.addListener(
@@ -152,40 +139,50 @@ function KakaoMap() {
       const response = await axios.get(`http://localhost:3300/places/search?keyword=${searchTerm}`);
 
       if (response) {
+
         const storeData = response.data;
         setSearchedListData(storeData);
+        console.log(response)
       }
     } catch (error) {
       console.error('Failed to search for places:', error);
     }
-  
+
   };
-
   return (
-    <div>
-      <div id="map" style={{ width: '100%', height: '350px' }}></div>
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-      <button onClick={handleSearch}>Search</button>
-      <ul>
-      {searchedListData.length > 0
-  ? searchedListData.map((store) => (
-      <li key={store.id}>
-        <Link to={`/store/${store.id}`}>{store.name}</Link>
-      </li>
-    ))
-  : listData.map((store) => (
-      <li key={store.id}>
-        <Link to={`/store/${store.id}`}>{store.name}</Link>
-      </li>
-    ))}
+    <Container maxW='3x2' bg='blue.600' centerContent>
 
-      </ul>
-    </div>
+      <Box>
+        <Box id="map" style={{ width: '100%', height: '350px' }}></Box>
+        <Input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Button
+          onClick={handleSearch}
+          colorScheme="pink"
+          size="md"
+          _hover={{ bg: 'teal.5000' }}
+          _active={{ bg: 'teal.6000' }}
+        >
+          Search
+        </Button>
+        <UnorderedList>
+          {searchedListData.length > 0
+            ? searchedListData.map((store) => (
+              <ListItem key={store.storeid}>
+                <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
+              </ListItem>
+            ))
+            : listData.map((store) => (
+              <ListItem key={store.storeid}>
+                <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
+              </ListItem>
+            ))}
+        </UnorderedList>
+      </Box>
+    </Container>
   );
 }
-
 export default KakaoMap;
