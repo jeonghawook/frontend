@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import  useAuthStore from '../api/store';
 import jwt_decode from 'jwt-decode'
 import instance  from '../api/interceptor';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const { isLogIn, email, isAdmin, logout, login } = useAuthStore();
@@ -16,8 +17,16 @@ const Header = () => {
     setPassword(e.target.value);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async(e) => {
+    try{
+    const response = await instance.delete(`/auth/logout`);
+    
     logout();
+    localStorage.removeItem('accessToken')
+    localStorage.removeItem('refreshToken')
+    }catch(error){
+      console.log(error)
+    }
   };
 
   const handleLogin = async (e) => {
@@ -37,9 +46,10 @@ const Header = () => {
         localStorage.setItem('refreshToken', refreshToken);
 
         const decodedToken = jwt_decode(accessToken);
-        const { isAdmin, email, userId } = decodedToken;
 
-        login(email, isAdmin, userId);
+        const { isAdmin, email, userId, StoreId } = decodedToken;
+        console.log(decodedToken)
+        login(email, isAdmin, userId,StoreId);
       }
     } catch (error) {
       console.error('Login failed:', error);
@@ -55,6 +65,7 @@ const Header = () => {
               Welcome, {email}
             </li>
             <li>
+            <Link to={'/admin'}>AdminPage</Link>
               <button onClick={handleLogout}>Logout</button>
             </li>
           </ul>

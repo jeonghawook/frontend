@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-   
+import {
+  Box,
+  Button,
+  Input,
+  List,
+  ListItem,
+  Text,
+  VStack,
+  Card,
+  Stack,
+  CardHeader,
+  Heading,
+  CardBody
+} from '@chakra-ui/react';
 import axios from 'axios';
 
 function KakaoMap() {
@@ -14,12 +27,15 @@ function KakaoMap() {
   useEffect(() => {
     const fetchCoordinates = async () => {
       try {
-        const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
-        const latitude = response.data.latitude;
-        const longitude = response.data.longitude;
-        setMyLatitude(latitude);
-        setMyLongitude(longitude);
+        navigator.geolocation.getCurrentPosition(function (position) {
+          var lat = position.coords.latitude; // 위도
+          var lon = position.coords.longitude; // 경도
+          console.log(lat, lon);
+          setMyLatitude(lat);
+          setMyLongitude(lon);
+        });
       } catch (error) {
+        
         console.error('Failed to fetch coordinates:', error);
       }
     };
@@ -72,7 +88,7 @@ function KakaoMap() {
         {
         swLatlng,
         neLatlng,
-        myLatitude, 
+        myLatitude,   
         myLongitude
         }
       );
@@ -141,30 +157,70 @@ function KakaoMap() {
   };
 
   return (
-    <div>
-      <div id="map" style={{ width: '100%', height: '350px' }}></div>
-      <input
+    <VStack spacing={4} align="center"> {/* Added align="center" to center the content */}
+      <Box
+        id="map"
+        height="350px"
+        width="500px"
+      />
+      <Input
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
+        placeholder="Search places..."
+        width="500px"
       />
-      <button onClick={handleSearch}>Search</button>
-      <ul>
-      {searchedListData.length > 0
-  ? searchedListData.map((store) => (
-      <li key={store.storeid}>
-        <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
-      </li>
-    ))
-  : listData.map((store) => (
-      <li key={store.storeid}>
-        <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
-      </li>
-    ))}
-
-      </ul>
-    </div>
+      <Button onClick={handleSearch} colorScheme="blue" width="500px">
+        Search
+      </Button>
+      <List>
+        {searchedListData.length > 0 ? (
+          <Stack spacing="4" width="500px"> {/* Added width="500px" to match the listData */}
+            {searchedListData.map((store) => (
+              <Card key={store.storeid} variant={'filled'}>
+                <CardHeader>
+                  <Heading size="sm">{store.storename}</Heading>
+                </CardHeader>
+                <CardBody>
+                  <Text>Store ID: {store.storeid}</Text>
+                  {/* Add more details or customize the card body */}
+                </CardBody>
+              </Card>
+            ))}
+          </Stack>
+        ) : (
+          <Box height="400px" overflowY="auto" width="500px" sx={{
+            '&::-webkit-scrollbar': {
+              width: '8px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+            },
+            '&::-webkit-scrollbar-thumb': {
+              backgroundColor: 'rgba(0, 0, 0, 0.05)',
+            },
+          }}>
+          <Stack spacing="4" width="500px"> {/* Added width="500px" to match the listData */}
+            {listData.map((store) => (
+              <Card key={store.storeid} variant={'filled'}>
+                <Link to={`/store/${store.storeid}/page`}>
+                <CardHeader>
+                  <Heading size="sm">{store.storename}</Heading>
+                </CardHeader>
+                <CardBody>
+              
+                  <Text>Store ID: {store.storeid}</Text>
+                  
+                  {/* Add more details or customize the card body */}
+                </CardBody>
+                </Link>
+              </Card>
+            ))}
+          </Stack>
+          </Box>
+        )}
+      </List>
+    </VStack>
   );
+  
 }
-
 export default KakaoMap;

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import instance from '../api/interceptor';
 
 function StorePage() {
   const { storeId } = useParams();
@@ -10,28 +11,31 @@ function StorePage() {
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3300/places/${storeId}`);
+        const response = await instance.get(`/places/${storeId}`);
         const storeData = response.data;
         setStoreData(storeData);
+        console.log(storeData);
       } catch (error) {
         console.error('Failed to fetch store data:', error);
       }
     };
-
+  
     fetchStoreData();
   }, [storeId]);
+  
 
   const handleChange = (e) => {
     setNumber(e.target.value);
   };
 
-  const handleClick = async () => {
+  const handleClick = async (e) => {
+    e.preventDefault();
     try {
-      const response = await axios.post(`http://localhost/${storeId}/waitings`, {
+      console.log("CEHCK1")
+      const response = await instance.post(`/stores/${storeId}/waitings`, {
         peopleCnt: parseInt(number),
-      });
-
-      // Handle the response or perform any other necessary actions
+      });                   
+      console.log("CHECK2")
       console.log(response.data);
     } catch (error) {
       console.error('Failed to send number to backend:', error);
@@ -41,7 +45,7 @@ function StorePage() {
   if (!storeData) {
     return <div>Loading...</div>;
   }
-console.log(storeData)
+
   return (
     <div>
       <h2>일단 잘보이게 스토어 아이디: {storeId}</h2>

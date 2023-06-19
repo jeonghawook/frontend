@@ -15,45 +15,52 @@ const isTokenExpired = (token) => {
   }
 
   const decodedToken = jwt_decode(token);
-  const currentTime = Date.now() / 1000;
+  const currentTime = Date.now() / 1000; 
 
   return decodedToken.exp <= currentTime;
 };
-
-const Interceptor = () => {
-  const { isLogIn, email, isAdmin, login, logout } = useAuthStore();
 
   // Request interceptor
   instance.interceptors.request.use(async (config) => {
     const accessToken = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');
-
+    console.log("intercepting")
     if (!accessToken) {
+ 
       return config;
     }
 
     if (!isTokenExpired(accessToken)) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+      console.log("going")
       return config;
     } else {
       try {
-        const response = await axios.post(`${baseURL}/auth/refresh`, { refreshToken });
+        console.log("trying")
+    
+        const response = await axios.post(`${baseURL}/auth/refresh`,
+         {},      {
+          headers: {
+            authorization: `Bearer ${refreshToken}`,
+          },
+        });
+        
         const newAccessToken = response.data.accessToken;
-        const newRefreshToken = response.data.refreshToken;
+       
 
         localStorage.setItem('accessToken', newAccessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
-        const decodedToken = jwt_decode(newAccessToken);
-        const { email, userId, isAdmin } = decodedToken;
+     
+        // const decodedToken = jwt_decode(newAccessToken);
+        // const { email, userId, isAdmin } = decodedToken;
 
-        login(email, isAdmin, userId);
+       
 
         config.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return config;
       } catch (error) {
         console.error(error);
-        logout();
+      
       }
     }
   }, (error) => {
@@ -70,8 +77,5 @@ const Interceptor = () => {
       return Promise.reject(error);
     }
   );
-
-  return null; // or you can return any JSX component if needed
-};
 
 export default instance;

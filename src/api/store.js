@@ -9,8 +9,9 @@ const useAuthStore = create(
       email: '',
       isAdmin: '',
       userId:'',
-      login: (email,isAdmin, userId) => set({isLogIn:true , email: email, isAdmin: isAdmin, userId:userId, }),
-      logout: () => set({ isLogIn: false, email: '', isAdmin: '', userId:'' }),
+      SVGAElementtoreId:null,
+      login: (email,isAdmin, userId, StoreId) => set({isLogIn:true , email: email, isAdmin: isAdmin, userId:userId, StoreId: StoreId }),
+      logout: () => set({ isLogIn: false, email: '', isAdmin: '', userId:'',storeId:null }),
     }),
     {
       name: 'auth-store',
