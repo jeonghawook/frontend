@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Button, Input, UnorderedList, ListItem } from '@chakra-ui/react';
-import { Container, Square, Circle } from '@chakra-ui/react'
-import axios from 'axios';
 import { Link } from 'react-router-dom';
+   
+import axios from 'axios';
+
 function KakaoMap() {
   const [myLatitude, setMyLatitude] = useState(null);
   const [myLongitude, setMyLongitude] = useState(null);
@@ -13,26 +13,16 @@ function KakaoMap() {
 
   useEffect(() => {
     const fetchCoordinates = async () => {
-
       try {
-
-        navigator.geolocation.getCurrentPosition(function (position) {
-
-          var lat = position.coords.latitude;// 위도
-          var lon = position.coords.longitude; // 경도
-          console.log(lat, lon)
-          setMyLatitude(lat);
-          setMyLongitude(lon);
-        });
-
-
+        const response = await axios.get('https://get.geojs.io/v1/ip/geo.json');
+        const latitude = response.data.latitude;
+        const longitude = response.data.longitude;
+        setMyLatitude(latitude);
+        setMyLongitude(longitude);
       } catch (error) {
         console.error('Failed to fetch coordinates:', error);
       }
     };
-
-    fetchCoordinates();
-
 
     fetchCoordinates();
   }, []);
@@ -80,16 +70,16 @@ function KakaoMap() {
       const response = await axios.post(
         'http://localhost:3300/places/coordinate',
         {
-          swLatlng,
-          neLatlng,
-          myLatitude,
-          myLongitude
+        swLatlng,
+        neLatlng,
+        myLatitude, 
+        myLongitude
         }
       );
 
       if (response) {
         const storeData = response.data
-
+      
         setListData(storeData);
         console.log(listData)
 
@@ -139,50 +129,42 @@ function KakaoMap() {
       const response = await axios.get(`http://localhost:3300/places/search?keyword=${searchTerm}`);
 
       if (response) {
-
+     
         const storeData = response.data;
         setSearchedListData(storeData);
-        console.log(response)
+           console.log(response)
       }
     } catch (error) {
       console.error('Failed to search for places:', error);
     }
-
+  
   };
-  return (
-    <Container maxW='3x2' bg='blue.600' centerContent>
 
-      <Box>
-        <Box id="map" style={{ width: '100%', height: '350px' }}></Box>
-        <Input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <Button
-          onClick={handleSearch}
-          colorScheme="pink"
-          size="md"
-          _hover={{ bg: 'teal.5000' }}
-          _active={{ bg: 'teal.6000' }}
-        >
-          Search
-        </Button>
-        <UnorderedList>
-          {searchedListData.length > 0
-            ? searchedListData.map((store) => (
-              <ListItem key={store.storeid}>
-                <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
-              </ListItem>
-            ))
-            : listData.map((store) => (
-              <ListItem key={store.storeid}>
-                <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
-              </ListItem>
-            ))}
-        </UnorderedList>
-      </Box>
-    </Container>
+  return (
+    <div>
+      <div id="map" style={{ width: '100%', height: '350px' }}></div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+      />
+      <button onClick={handleSearch}>Search</button>
+      <ul>
+      {searchedListData.length > 0
+  ? searchedListData.map((store) => (
+      <li key={store.storeid}>
+        <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
+      </li>
+    ))
+  : listData.map((store) => (
+      <li key={store.storeid}>
+        <Link to={`/store/${store.storeid}`}>{store.storename}</Link>
+      </li>
+    ))}
+
+      </ul>
+    </div>
   );
 }
+
 export default KakaoMap;

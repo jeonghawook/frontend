@@ -1,18 +1,15 @@
 import React, { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import Cookies from 'js-cookie';
-
-import jwt_decode from "jwt-decode";
-import instance from "../api/interceptor"
+import  useAuthStore from '../api/store';
+import jwt_decode from 'jwt-decode'
+import instance  from '../api/interceptor';
 
 const Header = () => {
-  const dispatch = useDispatch();
-  const { isLoggedIn, isAdmin, nickname } = useSelector((state) => state);
-  const [email, setEmail] = useState('');
+  const { isLogIn, email, isAdmin, logout, login } = useAuthStore();
+  const [userEmail, setUserEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleEmailChange = (e) => {
-    setEmail(e.target.value);
+    setUserEmail(e.target.value);
   };
 
   const handlePasswordChange = (e) => {
@@ -20,56 +17,51 @@ const Header = () => {
   };
 
   const handleLogout = () => {
-    Cookies.remove('accessToken');
-    dispatch({ type: 'LOGOUT' });
+    logout();
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
     try {
-        const response = await instance.post(`/auth/login`, {
-          email,
-          password,
-        });
-        if(response){
+      const response = await instance.post(`/auth/login`, {
+        email :userEmail,
+        password,
+      });
+      console.log("login")
+      if (response) {
         const refreshToken = response.data.refreshToken;
         const accessToken = response.data.accessToken;
-        const decodedToken = jwt_decode(accessToken); 
-        const {  isAdmin, email, userId } = decodedToken;
-  
-        console.log(decodedToken)
-        console.log('Access Token:', accessToken);
-        Cookies.set('refresh_token', refreshToken)
-        Cookies.set('access_token', accessToken);
-        dispatch({ type: 'LOGIN', payload: { email, userId, isAdmin } });
 
-        }
-    
-      } catch (error) {
-        console.error('Login failed:', error);
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('refreshToken', refreshToken);
+
+        const decodedToken = jwt_decode(accessToken);
+        const { isAdmin, email, userId } = decodedToken;
+
+        login(email, isAdmin, userId);
       }
-    
-
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
   };
 
   return (
     <header>
       <nav>
-        {isLoggedIn && isAdmin ? (
+        {isLogIn && isAdmin ? (
           <ul>
             <li>
-              Welcome, {email} 
+              Welcome, {email}
             </li>
             <li>
-            
               <button onClick={handleLogout}>Logout</button>
             </li>
           </ul>
-        ) : isLoggedIn && !isAdmin ? (
+        ) : isLogIn && !isAdmin ? (
           <ul>
             <li>
-              Welcome, {nickname}
+              Welcome, {email}
             </li>
             <li>
               <button onClick={handleLogout}>Logout</button>
@@ -81,7 +73,7 @@ const Header = () => {
               <form onSubmit={handleLogin}>
                 <div>
                   <label>Email:</label>
-                  <input type="text" value={email} onChange={handleEmailChange} />
+                  <input type="text" value={userEmail} onChange={handleEmailChange} />
                 </div>
                 <div>
                   <label>Password:</label>
