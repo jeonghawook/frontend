@@ -35,7 +35,7 @@ function KakaoMap() {
           setMyLongitude(lon);
         });
       } catch (error) {
-        
+
         console.error('Failed to fetch coordinates:', error);
       }
     };
@@ -86,16 +86,16 @@ function KakaoMap() {
       const response = await axios.post(
         'http://localhost:3300/places/coordinate',
         {
-        swLatlng,
-        neLatlng,
-        myLatitude,   
-        myLongitude
+          swLatlng,
+          neLatlng,
+          myLatitude,
+          myLongitude
         }
       );
 
       if (response) {
         const storeData = response.data
-      
+
         setListData(storeData);
         console.log(listData)
 
@@ -145,82 +145,105 @@ function KakaoMap() {
       const response = await axios.get(`http://localhost:3300/places/search?keyword=${searchTerm}`);
 
       if (response) {
-     
+
         const storeData = response.data;
         setSearchedListData(storeData);
-           console.log(response)
+        console.log(response)
       }
     } catch (error) {
       console.error('Failed to search for places:', error);
     }
-  
+
   };
 
   return (
-    <VStack spacing={4} align="center"> {/* Added align="center" to center the content */}
-      <Box
-        id="map"
-        height="350px"
-        width="500px"
-      />
-      <Input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search places..."
-        width="500px"
-      />
-      <Button onClick={handleSearch} colorScheme="blue" width="500px">
-        Search
-      </Button>
-      <List>
-        {searchedListData.length > 0 ? (
-          <Stack spacing="4" width="500px"> {/* Added width="500px" to match the listData */}
-            {searchedListData.map((store) => (
-              <Card key={store.storeid} variant={'filled'}>
-                <CardHeader>
-                  <Heading size="sm">{store.storename}</Heading>
-                </CardHeader>
-                <CardBody>
-                  <Text>Store ID: {store.storeid}</Text>
-                  {/* Add more details or customize the card body */}
-                </CardBody>
-              </Card>
-            ))}
-          </Stack>
-        ) : (
-          <Box height="400px" overflowY="auto" width="500px" sx={{
-            '&::-webkit-scrollbar': {
-              width: '8px',
-              borderRadius: '8px',
-              backgroundColor: 'rgba(0, 0, 0, 0.05)',
-            },
-            '&::-webkit-scrollbar-thumb': {
-              backgroundColor: 'rgba(0, 0, 0, 0.05)',
-            },
-          }}>
-          <Stack spacing="4" width="500px"> {/* Added width="500px" to match the listData */}
-            {listData.map((store) => (
-              <Card key={store.storeid} variant={'filled'}>
-                <Link to={`/store/${store.storeid}/page`}>
-                <CardHeader>
-                  <Heading size="sm">{store.storename}</Heading>
-                </CardHeader>
-                <CardBody>
-              
-                  <Text>Store ID: {store.storeid}</Text>
-                  
-                  {/* Add more details or customize the card body */}
-                </CardBody>
-                </Link>
-              </Card>
-            ))}
-          </Stack>
-          </Box>
-        )}
-      </List>
-    </VStack>
+    <Box
+      bg="red.100" // Background color
+      p={4} // Padding
+      borderRadius="lg" // Rounded corners
+      boxShadow="md" // Box shadow
+      width="500px"
+      height="100%"
+      margin="auto">
+      <VStack spacing={3} align="center"> {/* Added align="center" to center the content */}
+        <Box
+          id="map"
+          height="350px"
+          width="500px"
+        />
+        <Input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search places..."
+          width="500px"
+          bg="white"
+        />
+        <Button onClick={handleSearch} colorScheme="blue" width="500px">
+          Search
+        </Button>
+        <List>
+          {searchedListData.length > 0 ? (
+            <Box height="400px" overflowY="auto" width="500px" sx={{
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}>
+              <Stack spacing="3" width="500px"> {/* Added width="500px" to match the listData */}
+                {searchedListData.map((store) => (
+                  <Card key={store.storeid} variant={'filled'} height="">
+                    <Link to={`/store/${store.storeid}/page`}>
+                      <CardHeader>
+                        <Heading size="sm">{store.storename}</Heading>
+                      </CardHeader>
+                      <CardBody>
+                        <Text>Store ID: {store.storeid}</Text>
+                        {/* Add more details or customize the card body */}
+                      </CardBody>
+                    </Link>
+                  </Card>
+                ))}
+              </Stack>
+            </Box>
+          ) : (
+            <Box height="400px" overflowY="auto" width="500px" sx={{
+              '&::-webkit-scrollbar': {
+                width: '8px',
+                borderRadius: '8px',
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(0, 0, 0, 0.05)',
+              },
+            }}>
+              <Stack spacing="4" width="500px"> {/* Added width="500px" to match the listData */}
+                {listData.map((store) => (
+                  <Card key={store.storeid} variant={'filled'}>
+                    <Link to={`/store/${store.storeid}/page`}>
+                      <CardHeader>
+                        <Heading size="sm">{store.storename}</Heading>
+                      </CardHeader>
+                      <CardBody>
+
+                        <Text>Store ID: {store.storeid}</Text>
+
+                        {/* Add more details or customize the card body */}
+                      </CardBody>
+                    </Link>
+                  </Card>
+                ))}
+              </Stack>
+            </Box>
+          )}
+        </List>
+      </VStack>
+    </Box>
   );
-  
+
 }
 export default KakaoMap;

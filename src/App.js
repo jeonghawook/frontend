@@ -4,17 +4,17 @@ import KakaoMap from './pages/KakaoMap';
 import Header from './components/header';
 import StorePage from './pages/StorePage';
 import AdminPage from './pages/AdminPage';
-import Interceptor from './api/interceptor'
+import SignupPage from './pages/Signup';
 
 function App() {
   return (
     
     <BrowserRouter>
-  
       <Header/> 
         <Routes>
           <Route path="/" element={<KakaoMap />} />
           <Route path="/store/:storeId/page" element={<StorePage />} />
+          <Route path="/signup" element={<SignupPage/>}/>
           <Route path="/admin" element ={<AdminPage />} />
         </Routes>
         </BrowserRouter>

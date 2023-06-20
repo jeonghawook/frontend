@@ -3,19 +3,15 @@ import  useAuthStore from '../api/store';
 import jwt_decode from 'jwt-decode'
 import instance  from '../api/interceptor';
 import { Link } from 'react-router-dom';
+import LoginModal from './loginmodal';
+import { Button,Icon,VStack,Box,HStack  } from '@chakra-ui/react';
+import { FaUser } from 'react-icons/fa'
 
 const Header = () => {
   const { isLogIn, email, isAdmin, logout, login } = useAuthStore();
-  const [userEmail, setUserEmail] = useState('');
-  const [password, setPassword] = useState('');
+ const [showLoginModal, setShowLoginModal] = useState(false);
 
-  const handleEmailChange = (e) => {
-    setUserEmail(e.target.value);
-  };
 
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value);
-  };
 
   const handleLogout = async(e) => {
     try{
@@ -29,9 +25,8 @@ const Header = () => {
     }
   };
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-
+  const handleLogin = async (userEmail, password) => {
+    //e.preventDefault();
     try {
       const response = await instance.post(`/auth/login`, {
         email :userEmail,
@@ -70,32 +65,46 @@ const Header = () => {
             </li>
           </ul>
         ) : isLogIn && !isAdmin ? (
-          <ul>
-            <li>
-              Welcome, {email}
-            </li>
-            <li>
-              <button onClick={handleLogout}>Logout</button>
-            </li>
-          </ul>
+   
+<ul>  
+  <li>         
+
+      <VStack align="center" >
+       
+        <Box>{email}
+        <Button
+          size="sm"
+          icon={<Icon as={FaUser} boxSize={4} />} 
+          onClick={handleLogout}  
+           ml="280px"
+        >
+          Logout
+        </Button> 
+      </Box>
+      </VStack>
+   
+  </li>
+</ul>
+          
         ) : (
           <ul>
             <li>
-              <form onSubmit={handleLogin}>
-                <div>
-                  <label>Email:</label>
-                  <input type="text" value={userEmail} onChange={handleEmailChange} />
-                </div>
-                <div>
-                  <label>Password:</label>
-                  <input type="password" value={password} onChange={handlePasswordChange} />
-                </div>
-                <button type="submit">Login</button>
-              </form>
+           <VStack align="center">
+                <Button
+                  size="sm"
+                  icon={<Icon as={FaUser} boxSize={4} />}
+                  onClick={() => setShowLoginModal(true)}
+                  className="person-button"
+                   ml="456px"
+                >
+                 <Box as={FaUser} boxSize={4} />
+                </Button>
+                {showLoginModal && (
+                  <LoginModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} handleLogin={handleLogin} />
+                )}
+           </VStack>
             </li>
-            <li>
-              <a href="/signup">Sign up</a>
-            </li>
+
           </ul>
         )}
       </nav>
