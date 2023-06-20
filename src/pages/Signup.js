@@ -6,12 +6,14 @@ import {
   FormErrorMessage,
   FormLabel,
   Input,
+  HStack,
   VStack,
   Radio,
   RadioGroup,
 } from '@chakra-ui/react';
 import { useForm } from 'react-hook-form';
 import instance from '../api/interceptor';
+import { useNavigate } from 'react-router-dom';
 
 const SignupPage = () => {
   const {
@@ -21,30 +23,27 @@ const SignupPage = () => {
   } = useForm();
 
   const [signupError, setSignupError] = useState('');
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+
+   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
       const response = await instance.post('/auth/signup', data);
       console.log(response.data);
-      // Handle successful signup
+      navigate('/');
+ 
     } catch (error) {
-      setSignupError('다시 확인해주세요'); // Display error message
+      setSignupError('다시 확인해주세요'); 
     }
   };
 
   return (
-       <Box
-      bg="red.100" // Background color
-      p={4} // Padding
-      borderRadius="lg" // Rounded corners
-      boxShadow="md" // Box shadow
-      width="500px"
-      margin="auto">
-      <VStack spacing={4} align="center" width="500px" maxWidth="100%">
-      <form onSubmit={handleSubmit(onSubmit)}>
+    <VStack >
+      <form onSubmit={handleSubmit(onSubmit)} style={{ position: 'relative' }}>
         <FormControl isInvalid={errors.email} width="100%">
           <FormLabel>Email</FormLabel>
-          <Input type="email" {...register('email', { required: true })} />
+          <Input type="email" {...register('email', { required: true })} bg="white" />
           <FormErrorMessage>
             {errors.email && 'Email is required.'}
           </FormErrorMessage>
@@ -52,7 +51,7 @@ const SignupPage = () => {
 
         <FormControl isInvalid={errors.nickname} width="100%">
           <FormLabel>Nickname</FormLabel>
-          <Input type="text" {...register('nickname', { required: true })} />
+          <Input type="text" {...register('nickname', { required: true })} bg="white" />
           <FormErrorMessage>
             {errors.nickname && 'Nickname is required.'}
           </FormErrorMessage>
@@ -63,6 +62,7 @@ const SignupPage = () => {
           <Input
             type="password"
             {...register('password', { required: true })}
+            bg="white"
           />
           <FormErrorMessage>
             {errors.password && 'Password is required.'}
@@ -74,6 +74,7 @@ const SignupPage = () => {
           <Input
             type="password"
             {...register('confirm', { required: true })}
+            bg="white"
           />
           <FormErrorMessage>
             {errors.confirm && 'Please confirm your password.'}
@@ -85,36 +86,55 @@ const SignupPage = () => {
           <Input
             type="tel"
             {...register('phoneNumber', { required: true })}
+            bg="white"
           />
           <FormErrorMessage>
             {errors.phoneNumber && 'Please enter a valid phone number.'}
           </FormErrorMessage>
         </FormControl>
 
-        <FormControl width="100%">
-          <FormLabel>StoreId</FormLabel>
-          <Input
-            type="tel"
-            {...register('storeId')}
-            placeholder="Leave empty for null"
-          />
-          <FormErrorMessage>
-            {errors.storeId && 'Please enter a valid store ID.'}
-          </FormErrorMessage>
-        </FormControl>
+        <RadioGroup
+          onChange={(value) => setIsUserAdmin(value === 'admin')}
+          value={isUserAdmin ? 'admin' : 'user'}
+          width="100%"
+        >
+          <FormLabel>User Type</FormLabel>
+          <HStack spacing={4}>
+            <Radio value="user">User</Radio>
+            <Radio value="admin">Admin</Radio>
+          </HStack>
+        </RadioGroup>
 
-        <Button type="submit" width="100%">
+        {isUserAdmin && (
+          <FormControl isInvalid={errors.storeId} width="100%">
+            <FormLabel>Store ID</FormLabel>
+            <Input
+              type="tel"
+              {...register('storeId')}
+              placeholder="없으면 놔두세요!"
+              bg="white"
+            />
+            <FormErrorMessage>
+              {errors.storeId && 'Please enter a valid store ID.'}
+            </FormErrorMessage>
+          </FormControl>
+        )}
+
+        <Button type="submit" width="100%" position="bottom" bottom={0}>
           Sign Up
         </Button>
-
+     
         {signupError && (
-          <Box color="red" mt={4}>
+      
+         <Box color="red" mt={4} >
             {signupError}
           </Box>
-        )}
+      
+     )}
+   
       </form>
     </VStack>
-    </Box>
   );
 };
+
 export default SignupPage;

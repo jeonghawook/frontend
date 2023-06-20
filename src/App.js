@@ -5,11 +5,20 @@ import Header from './components/header';
 import StorePage from './pages/StorePage';
 import AdminPage from './pages/AdminPage';
 import SignupPage from './pages/Signup';
+import {Box} from '@chakra-ui/react'
 
 function App() {
   return (
     
     <BrowserRouter>
+        <Box
+      bg="red.100" // Background color
+      p={4} // Padding
+      borderRadius="lg" // Rounded corners
+      boxShadow="md" // Box shadow
+      width="500px"
+      height="100vh"
+      margin="auto">
       <Header/> 
         <Routes>
           <Route path="/" element={<KakaoMap />} />
@@ -17,6 +26,7 @@ function App() {
           <Route path="/signup" element={<SignupPage/>}/>
           <Route path="/admin" element ={<AdminPage />} />
         </Routes>
+        </Box>
         </BrowserRouter>
   );
 }
