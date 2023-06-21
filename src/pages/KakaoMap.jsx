@@ -194,7 +194,7 @@ function KakaoMap() {
                       <Heading size="sm">{store.storename}</Heading>
                     </CardHeader>
                     <CardBody>
-                      <Text>Store ID: {store.storeid}</Text>
+                      <Text>Store ID: {store.address}</Text>
                       {/* Add more details or customize the card body */}
                     </CardBody>
                   </Link>
@@ -225,11 +225,10 @@ function KakaoMap() {
                   <Link to={`/store/${store.storeid}/page`}>
                     <CardHeader>
                       <Heading size="sm">{store.storename}</Heading>
+                      <Text>대기중: {store.currentwaitingcnt}/{store.maxwaitingcnt}</Text>
                     </CardHeader>
                     <CardBody>
-                      <Text>Store ID: {store.storeid}</Text>
-
-                      {/* Add more details or customize the card body */}
+                      <Text>주소: {store.address}</Text>
                     </CardBody>
                   </Link>
                 </Card>

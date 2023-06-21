@@ -15,6 +15,8 @@ import {
   Select,
   Card,
 } from "@chakra-ui/react";
+import { useQuery } from 'react-query';
+
 
 function StorePage() {
   const { storeId } = useParams();
@@ -35,7 +37,7 @@ function StorePage() {
       const response = await instance.get(`/places/${storeId}`);
       const storeData = response.data;
       setStoreData(storeData);
-      console.log(storeData.reviews);
+      console.log(storeData);
     } catch (error) {
       console.error("Failed to fetch store data:", error);
     }
@@ -55,24 +57,51 @@ function StorePage() {
   const handleReviewChange = (e) => {
     setReviewInput(e.target.value);
   };
-const handleRating = (e)=>{
-  setRatingNumber(e.target.value)
-}
+  const handleRating = (e) => {
+    setRatingNumber(e.target.value)
+  }
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Send the review to the backend
+
       const response = await instance.post(`stores/${storeId}/reviews`, {
         review: reviewInput,
-        rating: ratingNumber,
+        rating: parseInt(ratingNumber),
       });
-      console.log(response.data);
-      // Clear the review input field
+      console.log(response.data.review);
+
+      const newReview = {
+        rating: parseInt(ratingNumber),
+        review: reviewInput,
+      };
+      setStoreData((prevStoreData) => ({
+        ...prevStoreData,
+        review: [newReview, ...prevStoreData.review],
+      }));
       setReviewInput("");
+      setRatingNumber("")
+
     } catch (error) {
       console.error("Failed to send review to backend:", error);
     }
   };
+
+
+
+  const fetchReviewsData = async () => {
+    try {
+      const response = await instance.get(`stores/${storeId}/reviews`);
+      return response.data;
+    } catch (error) {
+      throw new Error('Failed to fetch reviews data');
+    }
+  };
+
+
+
+  const { data: reviewsData, isLoading, isError } = useQuery('reviews', fetchReviewsData);
+
+
 
   const handleClick = async (e) => {
     e.preventDefault();
@@ -171,19 +200,19 @@ const handleRating = (e)=>{
         />
         <form onSubmit={handleReviewSubmit}>
           <Flex align="center" justify="space-between" mt={4}>
-          <Select
-      value={ratingNumber}
-      onChange={handleRating}
-      placeholder="별점"
-      width="30%"
-      marginRight="1rem"
-    >
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-    </Select>
+            <Select
+              value={ratingNumber}
+              onChange={handleRating}
+              placeholder="별점"
+              width="25%"
+              marginRight="1rem"
+            >
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </Select>
             <Input
               type="text"
               value={reviewInput}
@@ -198,15 +227,50 @@ const handleRating = (e)=>{
             </Button>
           </Flex>
         </form>
-        <Box>
-          {storeData.reviews.map((review, index) => (
-            <Card key={index} variant="filled" mt={2}>
-              {review.details}
-            </Card>
-          ))}
+        <Box paddingTop="200px">
+          <Box
+            height="300px"
+            overflowY="auto"
+            overflowX="hidden"
+            width="500px"
+            sx={{
+              "&::-webkit-scrollbar": {
+                width: "8px",
+                borderRadius: "8px",
+                backgroundColor: "rgba(0, 0, 0, 0.05)",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                backgroundColor: "rgba(0, 0, 0, 0.05)",
+              },
+            }}
+          >
+
+            {isError && <div>Error occurred while fetching reviews</div>}
+            {isLoading ? (
+              <div>Loading reviews...</div>
+            ) : (
+              <div>
+                {reviewsData.map((review, index) => (
+                  <Card key={index} variant="filled" backgroundColor="white" mt={2}>
+                    <Box height="100px">
+                      <Box height="100px">
+                        <Flex justifyContent="space-between" alignItems="center">
+                          <Text>아이디부분</Text>
+                          <Text>{review.rating} 점</Text>
+                        </Flex>
+                        <Text>내용: {review.review}</Text>
+                      </Box>
+                    </Box>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+          </Box>
         </Box>
       </Box>
     </VStack>
+
   );
 }
 

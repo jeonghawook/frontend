@@ -25,16 +25,20 @@ const SignupPage = () => {
   const [signupError, setSignupError] = useState('');
   const [isUserAdmin, setIsUserAdmin] = useState(false);
 
-   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const onSubmit = async (data) => {
     try {
-      const response = await instance.post('/auth/signup', data);
+      const userData = {
+        ...data,
+        isAdmin: isUserAdmin,
+      };
+
+      const response = await instance.post('/auth/signup', userData);
       console.log(response.data);
       navigate('/');
- 
     } catch (error) {
-      setSignupError('다시 확인해주세요'); 
+      setSignupError('다시 확인해주세요');
     }
   };
 
@@ -100,8 +104,8 @@ const SignupPage = () => {
         >
           <FormLabel>User Type</FormLabel>
           <HStack spacing={4}>
-            <Radio value="user">User</Radio>
-            <Radio value="admin">Admin</Radio>
+            <Radio value={Boolean(false)} >User</Radio>
+            <Radio value={Boolean(true)} >Admin</Radio>
           </HStack>
         </RadioGroup>
 
@@ -109,8 +113,8 @@ const SignupPage = () => {
           <FormControl isInvalid={errors.storeId} width="100%">
             <FormLabel>Store ID</FormLabel>
             <Input
-              type="tel"
-              {...register('storeId')}
+              type="number"
+              {...register('StoreId')}
               placeholder="없으면 놔두세요!"
               bg="white"
             />
@@ -123,15 +127,15 @@ const SignupPage = () => {
         <Button type="submit" width="100%" position="bottom" bottom={0}>
           Sign Up
         </Button>
-     
+
         {signupError && (
-      
-         <Box color="red" mt={4} >
+
+          <Box color="red" mt={4} >
             {signupError}
           </Box>
-      
-     )}
-   
+
+        )}
+
       </form>
     </VStack>
   );

@@ -37,7 +37,6 @@ const isTokenExpired = (token) => {
     } else {
       try {
         console.log("trying")
-    
         const response = await axios.post(`${baseURL}/auth/refresh`,
          {},      {
           headers: {
@@ -52,8 +51,6 @@ const isTokenExpired = (token) => {
      
         // const decodedToken = jwt_decode(newAccessToken);
         // const { email, userId, isAdmin } = decodedToken;
-
-       
 
         config.headers.Authorization = `Bearer ${newAccessToken}`;
 
