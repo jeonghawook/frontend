@@ -15,6 +15,7 @@ import { useForm } from 'react-hook-form';
 import instance from '../api/interceptor';
 import { useNavigate } from 'react-router-dom';
 
+
 const SignupPage = () => {
   const {
     handleSubmit,
@@ -32,8 +33,9 @@ const SignupPage = () => {
       const userData = {
         ...data,
         isAdmin: isUserAdmin,
-      };
 
+      };
+      console.log(userData)
       const response = await instance.post('/auth/signup', userData);
       console.log(response.data);
       navigate('/');
@@ -102,21 +104,22 @@ const SignupPage = () => {
           value={isUserAdmin ? 'admin' : 'user'}
           width="100%"
         >
-          <FormLabel>User Type</FormLabel>
+          <FormLabel>유저/어드민</FormLabel>
           <HStack spacing={4}>
-            <Radio value={Boolean(false)} >User</Radio>
-            <Radio value={Boolean(true)} >Admin</Radio>
+            <Radio value="user" >일반회원</Radio>
+            <Radio value="admin" >가게주인</Radio>
           </HStack>
         </RadioGroup>
 
         {isUserAdmin && (
           <FormControl isInvalid={errors.storeId} width="100%">
-            <FormLabel>Store ID</FormLabel>
             <Input
               type="number"
               {...register('StoreId')}
-              placeholder="없으면 놔두세요!"
+              placeholder="음식점 번호: "
               bg="white"
+              marginBottom="20px"
+              marginTop="20px"
             />
             <FormErrorMessage>
               {errors.storeId && 'Please enter a valid store ID.'}

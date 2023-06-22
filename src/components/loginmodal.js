@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter, Input, Button } from '@chakra-ui/react';
 import { Link } from 'react-router-dom';
+
+
+
 const LoginModal = ({ isOpen, onClose, handleLogin }) => {
   const [userEmail, setUserEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -15,7 +18,12 @@ const LoginModal = ({ isOpen, onClose, handleLogin }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    handleLogin(userEmail, password);
+    const loginDto = { userEmail, password }
+    handleLogin(loginDto);
+  };
+
+  const handleSignUpClick = () => {
+    onClose();
   };
 
   return (
@@ -37,8 +45,8 @@ const LoginModal = ({ isOpen, onClose, handleLogin }) => {
             <Button type="submit" colorScheme="blue" mt={4}>
               로그인
             </Button>
-             <Button type="submit" colorScheme="blue"ml={4} mt={4}> 
-             <Link to={'/signup'}> 회원가입</Link>
+            <Button type="submit" colorScheme="blue" ml={4} mt={4} onClick={handleSignUpClick}>
+              <Link to={'/signup'} > 회원가입</Link>
             </Button>
           </form>
         </ModalBody>

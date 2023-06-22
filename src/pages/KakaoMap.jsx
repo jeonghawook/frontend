@@ -5,14 +5,12 @@ import {
   Button,
   Input,
   List,
-  ListItem,
   Text,
   VStack,
   Card,
   Stack,
   CardHeader,
   Heading,
-  CardBody,
 } from "@chakra-ui/react";
 import axios from "axios";
 
@@ -78,7 +76,7 @@ function KakaoMap() {
       const neLatlng = bounds.getNorthEast();
 
       const response = await axios.post(
-        "http://localhost:3300/places/coordinate",
+        "http://localhost:3300/stores/nearby-stores-elastic",
         {
           swLatlng,
           neLatlng,
@@ -137,7 +135,7 @@ function KakaoMap() {
   const handleSearch = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3300/places/search?keyword=${searchTerm}`
+        `http://localhost:3300/stores/search?keyword=${searchTerm}`
       );
 
       if (response) {
@@ -152,27 +150,25 @@ function KakaoMap() {
 
   return (
     <VStack spacing={3} align="center">
-      {" "}
-      {/* Added align="center" to center the content */}
-      <Box id="map" height="350px" width="500px" />
+      <Box id="map" height="350px" width="450px" />
       <Input
         type="text"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         placeholder="Search places..."
-        width="500px"
+        width="450px"
         bg="white"
       />
-      <Button onClick={handleSearch} colorScheme="blue" width="500px">
+      <Button onClick={handleSearch} colorScheme="blue" width="450px">
         Search
       </Button>
       <List>
         {searchedListData.length > 0 ? (
           <Box
-            height="400px"
+            height="450px"
             overflowY="auto"
             overflowX="hidden"
-            width="500px"
+            width="450px"
             sx={{
               "&::-webkit-scrollbar": {
                 width: "8px",
@@ -184,19 +180,20 @@ function KakaoMap() {
               },
             }}
           >
-            <Stack spacing="3" width="500px">
+            <Stack spacing="3" width="450px">
               {" "}
-              {/* Added width="500px" to match the listData */}
+              {/* Added width="450px" to match the listData */}
               {searchedListData.map((store) => (
                 <Card key={store.storeid} variant={"filled"} height="">
                   <Link to={`/store/${store.storeid}/page`}>
-                    <CardHeader>
-                      <Heading size="sm">{store.storename}</Heading>
+                    <CardHeader >
+                      <Heading display="flex" justifyContent="space-between" size="sm">{store.storename}
+                        <Text size="sm" paddingBottom="5px">대기중: {store.currentWaitingCnt}/{store.maxwaitingcnt}</Text></Heading>
+                      <Text>{store.distance}</Text>
+                      <Text>주소: {store.address}</Text>
+
+
                     </CardHeader>
-                    <CardBody>
-                      <Text>Store ID: {store.address}</Text>
-                      {/* Add more details or customize the card body */}
-                    </CardBody>
                   </Link>
                 </Card>
               ))}
@@ -204,10 +201,10 @@ function KakaoMap() {
           </Box>
         ) : (
           <Box
-            height="290px"
+            height="380px"
             overflowY="auto"
             overflowX="hidden"
-            width="500px"
+            width="450px"
             sx={{
               "&::-webkit-scrollbar": {
                 width: "8px",
@@ -219,17 +216,19 @@ function KakaoMap() {
               },
             }}
           >
-            <Stack spacing="4" width="500px">
+            <Stack spacing="4" width="450px">
               {listData.map((store) => (
                 <Card key={store.storeid} variant={"filled"}>
                   <Link to={`/store/${store.storeid}/page`}>
-                    <CardHeader>
-                      <Heading size="sm">{store.storename}</Heading>
-                      <Text>대기중: {store.currentwaitingcnt}/{store.maxwaitingcnt}</Text>
-                    </CardHeader>
-                    <CardBody>
+                    <CardHeader >
+                      <Heading display="flex" justifyContent="space-between" size="sm">{store.storename}
+                        <Text size="sm" paddingBottom="5px">대기중: {store.currentWaitingcnt}/{store.maxwaitingcnt}</Text></Heading>
+                      <Text>{store.distance}</Text>
                       <Text>주소: {store.address}</Text>
-                    </CardBody>
+
+
+                    </CardHeader>
+
                   </Link>
                 </Card>
               ))}

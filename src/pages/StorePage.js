@@ -2,39 +2,44 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import instance from "../api/interceptor";
 import useAuthStore from "../api/store";
-import LoginModal from "../components/loginmodal";
-import jwt_decode from "jwt-decode";
+import LoginModal from '../components/loginModal'
 import {
-  Box,
-  Button,
-  Flex,
-  Heading,
-  Input,
-  Text,
-  VStack,
-  Select,
-  Card,
+  Box, Button, Flex, Heading, Input, Text, VStack, Select, Card,
 } from "@chakra-ui/react";
-import { useQuery } from 'react-query';
-
-
+import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { Login } from '../api/login'
+import { PostReview, StoreReviews } from "../api/review";
 function StorePage() {
   const { storeId } = useParams();
   const [storeData, setStoreData] = useState(null);
+  const [storeReview, setStoreReview] = useState([]);
   const [number, setNumber] = useState("");
-  const { isLogIn, email, isAdmin, logout, login } = useAuthStore();
+  const { isLogIn, userId, isAdmin, logout, login } = useAuthStore();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [error, setError] = useState("");
   const [reviewInput, setReviewInput] = useState("");
   const [ratingNumber, setRatingNumber] = useState("");
+  const [trigger, setTrigger] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    fetchStoreData();
-  }, [storeId]);
+    const fetchData = async () => {
+      await fetchStoreData();
+      await fetchReviewsData();
+    };
+    console.log("Check");
+    if (trigger === true) {
+      console.log("cjdma");
+      fetchData();
+      setTrigger(false);
+    }
+  }, [trigger, storeId]);
 
   const fetchStoreData = async () => {
     try {
-      const response = await instance.get(`/places/${storeId}`);
+      const response = await instance.get(`/stores/${storeId}`);
       const storeData = response.data;
       setStoreData(storeData);
       console.log(storeData);
@@ -43,6 +48,34 @@ function StorePage() {
     }
   };
 
+  const { isLoading, isError, data } = useQuery('store-review', () => StoreReviews(storeId))
+
+  const storeReviews = useMutation('store-review', StoreReviews, {
+    onSuccess: (reviews) => {
+      setStoreReview(reviews)
+    }, onError: {}
+  })
+
+
+  const handleStoreReviews = () => {
+    storeReviews.mutate(storeId)
+  }
+
+  const postReview = useMutation('store-review', PostReview, {
+    onSuccess: () => {
+      queryClient.invalidateQueries('store-review')
+      setReviewInput(""),
+        setRatingNumber("");
+    }
+  })
+
+  const handlePostReview = (reviewDto) => {
+    postReview.mutate(reviewDto, storeId)
+  }
+
+
+
+  //예약 숫자 팀
   const handleChange = (e) => {
     const value = e.target.value;
     if (value >= 1 && value <= 4) {
@@ -54,55 +87,30 @@ function StorePage() {
     }
   };
 
+
+  //리뷰 글
   const handleReviewChange = (e) => {
     setReviewInput(e.target.value);
   };
+  //리뷰 별점
   const handleRating = (e) => {
-    setRatingNumber(e.target.value)
+    setRatingNumber(e.target.value);
+  };
+
+
+
+  const handleDeleteReview = async (reviewId) => {
+
+    try {
+      const response = await instance.delete(`stores/${storeId}/reviews/${reviewId}`)
+      console.log(response.data)
+      setTrigger(true);
+    } catch (error) {
+      console.error("delete" + error)
+    }
   }
-  const handleReviewSubmit = async (e) => {
-    e.preventDefault();
-    try {
 
-      const response = await instance.post(`stores/${storeId}/reviews`, {
-        review: reviewInput,
-        rating: parseInt(ratingNumber),
-      });
-      console.log(response.data.review);
-
-      const newReview = {
-        rating: parseInt(ratingNumber),
-        review: reviewInput,
-      };
-      setStoreData((prevStoreData) => ({
-        ...prevStoreData,
-        review: [newReview, ...prevStoreData.review],
-      }));
-      setReviewInput("");
-      setRatingNumber("")
-
-    } catch (error) {
-      console.error("Failed to send review to backend:", error);
-    }
-  };
-
-
-
-  const fetchReviewsData = async () => {
-    try {
-      const response = await instance.get(`stores/${storeId}/reviews`);
-      return response.data;
-    } catch (error) {
-      throw new Error('Failed to fetch reviews data');
-    }
-  };
-
-
-
-  const { data: reviewsData, isLoading, isError } = useQuery('reviews', fetchReviewsData);
-
-
-
+  //예약 버튼 
   const handleClick = async (e) => {
     e.preventDefault();
     if (isLogIn) {
@@ -119,31 +127,17 @@ function StorePage() {
     }
   };
 
-  const handleLogin = async (userEmail, password) => {
-    try {
-      const response = await instance.post(`/auth/login`, {
-        email: userEmail,
-        password,
-      });
-      console.log("login");
-      if (response) {
-        const refreshToken = response.data.refreshToken;
-        const accessToken = response.data.accessToken;
-
-        localStorage.setItem("accessToken", accessToken);
-        localStorage.setItem("refreshToken", refreshToken);
-
-        const decodedToken = jwt_decode(accessToken);
-
-        const { isAdmin, email, userId, StoreId } = decodedToken;
-        console.log(decodedToken);
-        login(email, isAdmin, userId, StoreId);
-      }
-      setShowLoginModal(false);
-    } catch (error) {
-      console.error("Login failed:", error);
+  //비로그인 시 예약 로그인 모달 팝업 
+  const userLogin = useMutation(Login, {
+    onSuccess: ({ email, isAdmin, userId, StoreId }) => {
+      login(email, isAdmin, userId, StoreId)
+      setShowLoginModal(false)
     }
-  };
+  })
+
+  const handleLogin = (loginDto) => {
+    userLogin.mutate(loginDto)
+  }
 
   if (!storeData) {
     return <div>Loading...</div>;
@@ -165,11 +159,11 @@ function StorePage() {
           {storeData.category}
         </Text>
         <Text fontSize="md" mb={4}>
-          주소: {storeData.address}
+          주소: {storeData.newAddress}
         </Text>
 
         <form onSubmit={handleClick}>
-          <Box background="pink" padding="4px" borderRadius="10px">
+          <Box background="white" padding="4px" borderRadius="10px">
             <Flex align="center" justify="space-between">
               <Text>별점 {storeData.rating}</Text>
               <Flex align="center">
@@ -188,7 +182,7 @@ function StorePage() {
             </Flex>
           </Box>
           {error && (
-            <Box textAlign="right" color="red.500" fontSize="sm" mt={2}>
+            <Box textAlign="right" color="red.450" fontSize="sm" mt={2}>
               {error}
             </Box>
           )}
@@ -201,11 +195,13 @@ function StorePage() {
         <form onSubmit={handleReviewSubmit}>
           <Flex align="center" justify="space-between" mt={4}>
             <Select
+
               value={ratingNumber}
               onChange={handleRating}
               placeholder="별점"
               width="25%"
               marginRight="1rem"
+              backgroundColor='white'
             >
               <option value="1">1</option>
               <option value="2">2</option>
@@ -215,24 +211,39 @@ function StorePage() {
             </Select>
             <Input
               type="text"
-              value={reviewInput}
-              onChange={handleReviewChange}
+              value={isEditing ? updatedReview : reviewInput}
+              onChange={isEditing ? handleReviewChange : handleReviewChange}
               placeholder="리뷰쓰기"
               width="70%"
               marginRight="1rem"
               background="white"
             />
-            <Button type="submit" colorScheme="blue">
-              댓글달기
-            </Button>
+            {isEditing ? (
+              <Button colorScheme="blue" onClick={handleCancelEdit}>
+                취소
+              </Button>
+            ) : (
+              <Button type="submit" colorScheme="blue">
+                등록
+              </Button>
+            )}
+            {isEditing ? (
+              <Button
+                type="submit"
+                colorScheme="green"
+                onClick={() => handleUpdateReview(review)}
+              >
+                수정
+              </Button>
+            ) : null}
           </Flex>
         </form>
         <Box paddingTop="200px">
           <Box
-            height="300px"
+            height="380px"
             overflowY="auto"
             overflowX="hidden"
-            width="500px"
+            width="450px"
             sx={{
               "&::-webkit-scrollbar": {
                 width: "8px",
@@ -244,33 +255,51 @@ function StorePage() {
               },
             }}
           >
-
-            {isError && <div>Error occurred while fetching reviews</div>}
-            {isLoading ? (
-              <div>Loading reviews...</div>
-            ) : (
-              <div>
-                {reviewsData.map((review, index) => (
-                  <Card key={index} variant="filled" backgroundColor="white" mt={2}>
+            <div>
+              {storeReview.map((review, index) => (
+                <Card
+                  key={index}
+                  variant="filled"
+                  backgroundColor="white"
+                  mt={2}
+                >
+                  <Box height="100px">
                     <Box height="100px">
-                      <Box height="100px">
-                        <Flex justifyContent="space-between" alignItems="center">
-                          <Text>아이디부분</Text>
-                          <Text>{review.rating} 점</Text>
-                        </Flex>
-                        <Text>내용: {review.review}</Text>
-                      </Box>
-                    </Box>
-                  </Card>
-                ))}
-              </div>
-            )}
+                      <Flex justifyContent="space-between" alignItems="center">
+                        <Text>아이디부분</Text>
+                        <Text>{review.rating} 점</Text>
+                      </Flex>
+                      <Text>내용: {review.review}</Text>
 
+                      {userId === review.UserId && (
+                        <Flex justifyContent="flex-end">
+                          <Button
+                            colorScheme="blue"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUpdateReview(review)}
+                          >
+                            수정
+                          </Button>
+                          <Button
+                            colorScheme="blue"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteReview(review.reviewId)}
+                          >
+                            삭제
+                          </Button>
+                        </Flex>
+                      )}
+                    </Box>
+                  </Box>
+                </Card>
+              ))}
+            </div>
           </Box>
         </Box>
       </Box>
     </VStack>
-
   );
 }
 

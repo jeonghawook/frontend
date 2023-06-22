@@ -6,8 +6,9 @@ import instance from '../api/interceptor';
 function AdminPage() {
   const [listData, setListData] = useState([]);
   const { StoreId } = useAuthStore();
-  const [number, setNumber] = useState('');
-
+  const [peopleCnt, setPeopleCnt] = useState('');
+  const [userCnt, setUserCnt] = useState('')
+  const [error, setError] = useState("");
   useEffect(() => {
     fetchListData();
   }, []);
@@ -26,15 +27,28 @@ function AdminPage() {
     }
   };
 
-  const handleChange = (e) => {
-    setNumber(e.target.value);
+  const handlePeoplecnt = (e) => {
+    const value = e.target.value;
+    if (value >= 1 && value <= 4) {
+      setPeopleCnt(value);
+      setError("");
+    } else {
+      setPeopleCnt("");
+      setError("웨이팅은 1~4명!");
+    }
   };
+  const handleUserId = (e) => {
+    setUserCnt(e.target.value);
+  }
 
-  const handleClickEntering = async (userId) => {
+  const handleClickEntering = async () => {
     try {
-      await instance.post(`/stores/${StoreId}/waitings/${userId}/entered`, {
-        peopleCnt: parseInt(number),
+
+      const response = await instance.post(`/stores/${StoreId}/waitings/entered`, {
+        peopleCnt: parseInt(peopleCnt),
+        userId: parseInt(userCnt)
       });
+      console.log(response.data)
       fetchListData();
     } catch (error) {
       console.error('Failed to enter:', error);
@@ -80,16 +94,20 @@ function AdminPage() {
         <h2>List View (Admin)</h2>
         {listData.length === 0 ? (
           <Box>
-            <Input type="number" value={number} onChange={handleChange} />
-            <Button onClick={() => handleClickEntering(number)}>
+            <Input type="number" value={userCnt} onChange={handleUserId} />
+            <Input type="number" value={peopleCnt} onChange={handlePeoplecnt} />
+
+            <Button onClick={() => handleClickEntering(peopleCnt, userCnt)}>
               바로 입장
             </Button>
             <Box mt={2}>더 열심히 일하세요. 왜 손님이 없을까요?</Box>
           </Box>
         ) : (
           <List>
-            <Input type="number" value={number} onChange={handleChange} />
-            <Button onClick={() => handleClickEntering(number)}>
+            <Input type="number" value={userCnt} onChange={handleUserId} />
+            <Input type="number" value={peopleCnt} onChange={handlePeoplecnt} />
+
+            <Button onClick={() => handleClickEntering(peopleCnt, userCnt)}>
               바로 입장
             </Button>
             {listData.map((item) => (
