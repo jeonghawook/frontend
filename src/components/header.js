@@ -3,7 +3,7 @@ import useAuthStore from '../api/store';
 import { Link } from 'react-router-dom';
 import { Button, Icon, VStack, Box } from '@chakra-ui/react';
 import { FaUser } from 'react-icons/fa'
-import { Login, Logout } from '../api/login'
+import { Login, Logout } from '../api/loginAPI'
 import { useMutation } from 'react-query';
 import LoginModal from '../components/loginModal'
 

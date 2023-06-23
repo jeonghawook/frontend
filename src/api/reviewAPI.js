@@ -10,9 +10,10 @@ export const StoreReviews = async (storeId) => {
     }
 }
 
-export const PostReview = async (reviewDto, storeId) => {
+export const PostReview = async (reviewDto) => {
     try {
-        await instance.post(`stores/${storeId}/reviews`, {
+        console.log(reviewDto.storeId)
+        await instance.post(`stores/${reviewDto.storeId}/reviews`, {
             review: reviewDto.review,
             rating: parseInt(reviewDto.rating)
         })
@@ -21,9 +22,9 @@ export const PostReview = async (reviewDto, storeId) => {
     }
 }
 
-export const DeleteReview = async (storeId, reviewId) => {
+export const DeleteReview = async (deleteDto) => {
     try {
-        await instance.delete(`stores/${storeId}/reviews/${reviewId}`)
+        await instance.delete(`stores/${deleteDto.storeId}/reviews/${deleteDto.reviewId}`)
     } catch (error) {
         console.error("삭제 실패??")
     }
